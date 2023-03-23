@@ -65,6 +65,10 @@ case "$chain" in
     export ETHERSCAN_API_URL=https://api-testnet.snowtrace.io/api
     export ETHERSCAN_URL=https://testnet.snowtrace.io/address
     ;;
+  unknown)
+    echo "ETHERSCAN_API_URL=$ETHERSCAN_API_URL"
+    echo "ETHERSCAN_URL=$ETHERSCAN_URL"
+    ;;
   *)
     echo >&2 "Verification only works on mainnet, ropsten, kovan, rinkeby, goerli, polygon, fantom, arbitrum and avax."
     exit 1
