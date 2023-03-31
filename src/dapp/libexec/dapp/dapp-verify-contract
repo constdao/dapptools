@@ -107,7 +107,19 @@ version="v${version}"
 # Get the list of supported solc versions and compare
 # Etherscan uses the js solc, which is not guaranteed to match the C distribution signature
 
-version_list=$(curl -fsS "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/bin/list.txt")
+cache_version_list_out=${HOME}/.dapp/cache/solc-bin/
+if [ ! -d "$cache_version_list_out" ]; then
+  mkdir -p "$cache_version_list_out"
+fi
+cache_version_list="$cache_version_list_out/list.txt"
+if [ -f "$cache_version_list" ]; then
+  version_list=$(cat "$cache_version_list")
+else
+  version_list=$(curl -fsS "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/bin/list.txt")
+  echo "$version_list" > "$cache_version_list"
+fi
+
+#version_list=$(curl -fsS "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/bin/list.txt")
 # There have been a couple of instances where the solc js release used by
 #   Etherscan does not match the tag of the C distributions.
 if [[ $version_list != *"$version"* ]]; then
@@ -131,18 +143,11 @@ fi
 params=(
   "module=contract" "action=verifysourcecode"
   "contractname=$name" "contractaddress=$address"
-  "optimizationUsed=$optimized" "runs=$runs"
-  "apikey=$ETHERSCAN_API_KEY"
+  "optimizationUsed=$optimized" "runs=$runs" "codeformat=solidity-standard-json-input"
+  "apikey=$ETHERSCAN_API_KEY" "autodetectConstructorArguments=true"
 )
 
-source=$(hevm flatten --source-file "$file" --json-file "$DAPP_JSON" --dapp-root "$DAPP_ROOT")
-
-source=$(cat <<.
-// Verified using https://dapp.tools
-
-$source
-.
-)
+source=$(cat "${DAPP_BUILD_INFO}")
 
 query=$(printf "&%s" "${params[@]}")
 
